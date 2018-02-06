@@ -712,43 +712,43 @@ std::map<std::string, std::function<void()>> construct_tests() {
    test_mnist(
        32,  // batch_size
        3,  // num_epochs
-       true,  // useGPU
-       model, forward, optim);
- };
+           true,  // useGPU
+           model, forward, optim);
+     };
 
- tests["autograd/~integration/mnist_batchnorm"] = [test_mnist]() {  // ~ will make it run last :D
-   auto model = SimpleContainer().make();
-   auto conv1 = model->add(Conv2d(1, 10, 5).make(), "conv1");
-   auto batchnorm2d = model->add(
-       BatchNorm(10).stateful().make(),
-       "batchnorm2d");
-   auto conv2 = model->add(Conv2d(10, 20, 5).make(), "conv2");
-   auto linear1 = model->add(Linear(320, 50).make(), "linear1");
-   auto batchnorm1 = model->add(
-       BatchNorm(50).stateful().make(),
-       "batchnorm1");
-   auto linear2 = model->add(Linear(50, 10).make(), "linear2");
+     tests["autograd/~integration/mnist_batchnorm"] = [test_mnist]() {  // ~ will make it run last :D
+       auto model = SimpleContainer().make();
+       auto conv1 = model->add(Conv2d(1, 10, 5).make(), "conv1");
+       auto batchnorm2d = model->add(
+           BatchNorm(10).stateful().make(),
+           "batchnorm2d");
+       auto conv2 = model->add(Conv2d(10, 20, 5).make(), "conv2");
+       auto linear1 = model->add(Linear(320, 50).make(), "linear1");
+       auto batchnorm1 = model->add(
+           BatchNorm(50).stateful().make(),
+           "batchnorm1");
+       auto linear2 = model->add(Linear(50, 10).make(), "linear2");
 
-   auto forward = [&](Variable x) {
-     x = std::get<0>(at::max_pool2d(conv1->forward({x})[0], {2, 2})).clamp_min(0);
-     x = batchnorm2d->forward({x})[0];
-     x = conv2->forward({x})[0];
-     x = std::get<0>(at::max_pool2d(x, {2, 2})).clamp_min(0);
+       auto forward = [&](Variable x) {
+         x = std::get<0>(at::max_pool2d(conv1->forward({x})[0], {2, 2})).clamp_min(0);
+         x = batchnorm2d->forward({x})[0];
+         x = conv2->forward({x})[0];
+         x = std::get<0>(at::max_pool2d(x, {2, 2})).clamp_min(0);
 
-     x = x.view({-1, 320});
-     x = linear1->forward({x})[0].clamp_min(0);
-     x = batchnorm1->forward({x})[0];
-     x = linear2->forward({x})[0];
-     x = at::log_softmax(x, 1);
-     return x;
-   };
+         x = x.view({-1, 320});
+         x = linear1->forward({x})[0].clamp_min(0);
+         x = batchnorm1->forward({x})[0];
+         x = linear2->forward({x})[0];
+         x = at::log_softmax(x, 1);
+         return x;
+       };
 
-   auto optim = SGD(model, 1e-2).momentum(0.5).make();
+       auto optim = SGD(model, 1e-2).momentum(0.5).make();
 
-   test_mnist(
-       32,  // batch_size
-       3,  // num_epochs
-       true,  // useGPU
+       test_mnist(
+           32,  // batch_size
+           3,  // num_epochs
+           true,  // useGPU
        model, forward, optim);
  };
 
@@ -845,7 +845,21 @@ tests["autograd/~integration/cartpole"] = []() {
 
 };
 
- return tests;
+tests["autograd/random/seed"] = []() {
+  int size = 100;
+  setSeed(7);
+  auto x1 = Var(at::CPU(at::kFloat).randn({size}));
+  auto data1 = x1.data();
+
+  setSeed(7);
+  auto x2 = Var(at::CPU(at::kFloat).randn({size}));
+  auto data2 = x2.data();
+
+  auto l_inf_norm_diff = (data1 - data2).max().toCFloat();
+  EXPECT(l_inf_norm_diff < 1e-15);
+};
+
+return tests;
 }
 
 int main(int argc, char** argv) {

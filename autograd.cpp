@@ -464,4 +464,18 @@ void Adam::init_state() {
   exp_avg_sq_buffer_.clear();
 }
 
+void setSeed(int seed) {
+  for (auto i = 0; i < static_cast<int>(at::Backend::NumOptions); i++) {
+    // defaultGenerator() will throw an exception for backends that are not
+    // available (e.g. CUDA on non-GPU machines); silently ignore these.
+    try {
+      at::globalContext()
+          .defaultGenerator(static_cast<at::Backend>(i))
+          .manualSeed(static_cast<uint64_t>(seed));
+    } catch (...) {
+      continue;
+    }
+  }
+};
+
 } // namespace autograd
