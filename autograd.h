@@ -484,6 +484,8 @@ CEREAL_REGISTER_TYPE(autograd::SGD);
 CEREAL_REGISTER_POLYMORPHIC_RELATION(autograd::OptimizerImpl, autograd::SGD);
 CEREAL_REGISTER_TYPE(autograd::Adagrad);
 CEREAL_REGISTER_POLYMORPHIC_RELATION(autograd::OptimizerImpl, autograd::Adagrad);
+CEREAL_REGISTER_TYPE(autograd::RMSprop);
+CEREAL_REGISTER_POLYMORPHIC_RELATION(autograd::OptimizerImpl, autograd::RMSprop);
 CEREAL_REGISTER_TYPE(autograd::Adam);
 CEREAL_REGISTER_POLYMORPHIC_RELATION(autograd::OptimizerImpl, autograd::Adam);
 
